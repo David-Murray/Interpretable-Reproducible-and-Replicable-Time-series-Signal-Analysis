@@ -1,0 +1,66 @@
+
+
+Specifically, the following steps were conducted:
+
+\begin{enumerate}
+\item Clone GitHub URL in Documents. ( $\sim$ will represent the cloned directory location)
+
+\item Download REFIT Dataset\footnote{\href{https://pureportal.strath.ac.uk/en/datasets/refit-electrical-load-measurements-cleaned}{https://pureportal.strath.ac.uk/en/datasets/refit-electrical-load-measurements-cleaned}} in $\sim$/dataset\_management/refit/CLEAN\_REFIT\_081116/
+
+\item In $\sim$ terminal run conda env create -f environment.yml (This does not work)
+
+\item Recreate conda env from main packages
+
+\item Activate `transfernilm' conda environment
+
+\item In $\sim$/dataset\_management/refit/ terminal run \\python create\_dataset.py --data\_dir `./CLEAN\_REFIT\_081116/' --appliance\_name 
+`kettle' \\ --aggregate\_mean 522 --aggregate\_std 814 --save\_path `./'
+
+\item In $\sim$ create sub directory called "saved\_models"
+
+\item In file train\_main.py set line 25 to save\_model\_dir = ``$\sim$/saved\_models/" + argume...
+
+\item In $\sim$ terminal run\\python train\_main.py --appliance\_name kettle --epochs 50 --crop 10000 \\ --training\_directory $\sim$/dataset\_management/refit/kettle/kettle\_training\_.csv \\ --validation\_directory $\sim$/dataset\_management/refit/kettle/kettle\_validation\_H5.csv
+\begin{itemize}
+    \item Notes default epochs is 2, code comment suggests 10. In paper~\cite{DIncecco2020TransferMonitoring} the maximum number of epochs is set to 50. In the code the default number of rows (crop values) is 1000, code comment suggests 10,000.
+\end{itemize}
+ 
+ \item In $\sim$ terminal run\\python test\_main.py --appliance\_name kettle \\ --input\_window\_length 599 --crop 100000 \\ --test\_directory ``$\sim$dataset\_management/refit/kettle/kettle\_test\_H2.csv"
+    \begin{itemize}
+        \item By default the graph displayed shows a window of length 400. A crop value of 100000 shows a more complete picture.
+    \end{itemize}
+ 
+\end{enumerate}
+
+
+
+
+
+Replicability:
+
+\begin{enumerate}
+\item Clone GitHub URL in Documents. ( $\sim$ will represent the cloned directory location)
+
+\item Download REFIT Dataset\footnote{\href{https://pureportal.strath.ac.uk/en/datasets/refit-electrical-load-measurements-cleaned}{https://pureportal.strath.ac.uk/en/datasets/refit-electrical-load-measurements-cleaned}} in $\sim$/dataset\_management/refit/CLEAN\_REFIT\_081116/
+
+\item In $\sim$ terminal run conda env create -f environment.yml
+
+\item Activate `nilm' conda environment
+
+\item In $\sim$/dataset\_management/refit/ terminal run \\python create\_dataset.py --data\_dir `./CLEAN\_REFIT\_081116/' --appliance\_name 
+`kettle' \\ --aggregate\_mean 522 --aggregate\_std 814 --save\_path `./'
+
+\item In $\sim$ create sub directory called "saved\_models"
+
+\item In file train\_main.py set line 25 to save\_model\_dir = ``$\sim$/saved\_models/" + argume...
+
+\item In $\sim$ terminal run\\python train\_main.py --appliance\_name kettle --epochs 50 --crop 10000 \\ --training\_directory $\sim$/dataset\_management/refit/kettle/kettle\_training\_.csv \\ --validation\_directory $\sim$/dataset\_management/refit/kettle/kettle\_validation\_H5.csv
+\begin{itemize}
+    \item Notes default epochs is 2, code comment suggests 10. In paper~\cite{DIncecco2020TransferMonitoring} the maximum number of epochs is set to 50. In the code the default number of rows (crop values) is 1000, code comment suggests 10,000.
+\end{itemize}
+ 
+ \item In $\sim$ terminal run\\python test\_main.py --appliance\_name kettle \\ --input\_window\_length 599 --crop 100000 \\ --test\_directory ``$\sim$dataset\_management/refit/kettle/kettle\_test\_H2.csv"
+    \begin{itemize}
+     \item By default the graph displayed shows a window of length 400. A crop value of 100000 shows a more complete picture.
+    \end{itemize}
+\end{enumerate}

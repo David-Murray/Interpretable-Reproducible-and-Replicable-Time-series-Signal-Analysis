@@ -130,5 +130,6 @@ dmypy.json
 
 # Specific
 *.david
+*.csv
 # Python Numpy
 *.npy
