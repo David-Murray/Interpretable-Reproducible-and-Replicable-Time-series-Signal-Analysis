@@ -1,0 +1,269 @@
+   266
+
+=========start========
+initial classifier accuracy: 0.28571
+initial objective: 118.4853
+    6.3321
+
+    0.7476
+
+    0.5385
+
+    0.4196
+
+    0.3427
+
+    0.2889
+
+    0.2493
+
+    0.2189
+
+    0.1949
+
+    0.1755
+
+    0.1595
+
+    0.1461
+
+    0.1347
+
+    0.1249
+
+    0.1164
+
+    0.1090
+
+    0.1024
+
+    0.0966
+
+    0.0914
+
+    0.0867
+
+    0.0825
+
+    0.0786
+
+    0.0751
+
+    0.0719
+
+    0.0690
+
+    0.0662
+
+    0.0637
+
+    0.0614
+
+    0.0592
+
+    0.0572
+
+    0.0553
+
+    0.0536
+
+    0.0519
+
+    0.0504
+
+    0.0489
+
+    0.0475
+
+    0.0462
+
+    0.0450
+
+    0.0438
+
+    0.0427
+
+    0.0417
+
+    0.0407
+
+    0.0397
+
+    0.0388
+
+    0.0379
+
+    0.0371
+
+    0.0363
+
+    0.0355
+
+    0.0348
+
+    0.0341
+
+    0.0335
+
+    0.0328
+
+    0.0322
+
+    0.0316
+
+    0.0310
+
+    0.0305
+
+    0.0299
+
+    0.0294
+
+    0.0289
+
+    0.0285
+
+    0.0280
+
+    0.0276
+
+    0.0271
+
+    0.0267
+
+    0.0263
+
+    0.0259
+
+    0.0255
+
+    0.0252
+
+    0.0248
+
+    0.0244
+
+    0.0241
+
+    0.0238
+
+    0.0235
+
+    0.0231
+
+    0.0228
+
+    0.0226
+
+    0.0223
+
+    0.0220
+
+    0.0217
+
+    0.0214
+
+    0.0212
+
+    0.0209
+
+    0.0207
+
+    0.0205
+
+    0.0202
+
+    0.0200
+
+    0.0198
+
+    0.0195
+
+    0.0193
+
+    0.0191
+
+    0.0189
+
+    0.0187
+
+    0.0185
+
+    0.0183
+
+    0.0181
+
+    0.0180
+
+    0.0178
+
+    0.0176
+
+    0.0174
+
+    0.0173
+
+    0.0171
+
+    0.0169
+
+    0.0168
+
+    0.0166
+
+    0.0165
+
+    0.0163
+
+    0.0162
+
+    0.0160
+
+    0.0159
+
+    0.0158
+
+    0.0156
+
+    0.0155
+
+    0.0154
+
+    0.0152
+
+    0.0151
+
+    0.0150
+
+    0.0148
+
+{操作在以下过程中被用户终止 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('gradient_g_c_operator_norm_speed', 'E:\PHD\SPM paper\graph feature learning\Louisiana_microearthquake\files to github\code\gradient_g_c_operator_norm_speed.m', 46)" style="font-weight:bold">gradient_g_c_operator_norm_speed</a> (<a href="matlab: opentoline('E:\PHD\SPM paper\graph feature learning\Louisiana_microearthquake\files to github\code\gradient_g_c_operator_norm_speed.m',46,0)">第 46 行</a>)
+
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('sdp_binary_GU_oao_L_constant_sign_o_norm_replace_GLR_GTV_L_norm', 'E:\PHD\SPM paper\graph feature learning\Louisiana_microearthquake\files to github\code\sdp_binary_GU_oao_L_constant_sign_o_norm_replace_GLR_GTV_L_norm.m', 116)" style="font-weight:bold">sdp_binary_GU_oao_L_constant_sign_o_norm_replace_GLR_GTV_L_norm</a> (<a href="matlab: opentoline('E:\PHD\SPM paper\graph feature learning\Louisiana_microearthquake\files to github\code\sdp_binary_GU_oao_L_constant_sign_o_norm_replace_GLR_GTV_L_norm.m',116,0)">第 116 行</a>)
+            [grad_g_c, ~, ~] = gradient_g_c_operator_norm_speed( c_k, feature_train_test, FD, x );
+
+位置 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('classification_louisiana', 'E:\PHD\SPM paper\graph feature learning\Louisiana_microearthquake\files to github\code\classification_louisiana.m', 33)" style="font-weight:bold">classification_louisiana</a> (<a href="matlab: opentoline('E:\PHD\SPM paper\graph feature learning\Louisiana_microearthquake\files to github\code\classification_louisiana.m',33,0)">第 33 行</a>)
+    sdp_binary_GU_oao_L_constant_sign_o_norm_replace_GLR_GTV_L_norm( class_test, ...
+} 
+featurestander
+if system_dependent('IsDebugMode')==1, dbquit; end
+featurestander
+if system_dependent('IsDebugMode')==1, dbquit; end
+featurestander
+{错误使用 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('horzcat')" style="font-weight:bold">horzcat</a>
+要串联的数组的维度不一致。
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('featurestander', 'E:\PHD\SPM paper\graph feature learning\Louisiana_microearthquake\files to github\code\featurestander.m', 47)" style="font-weight:bold">featurestander</a> (<a href="matlab: opentoline('E:\PHD\SPM paper\graph feature learning\Louisiana_microearthquake\files to github\code\featurestander.m',47,0)">第 47 行</a>)
+test_whole_data=[test_label,test_set];
+} 
+featurestander
+{错误使用 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('horzcat')" style="font-weight:bold">horzcat</a>
+要串联的数组的维度不一致。
+
+出错 <a href="matlab:matlab.internal.language.introspective.errorDocCallback('featurestander', 'E:\PHD\SPM paper\graph feature learning\Louisiana_microearthquake\files to github\code\featurestander.m', 47)" style="font-weight:bold">featurestander</a> (<a href="matlab: opentoline('E:\PHD\SPM paper\graph feature learning\Louisiana_microearthquake\files to github\code\featurestander.m',47,0)">第 47 行</a>)
+test_whole_data=[test_label,test_set];
+} 
+opentoline('E:\PHD\SPM paper\graph feature learning\Louisiana_microearthquake\files to github\code\featurestander.m',47,0)
+featurestander
+if system_dependent('IsDebugMode')==1, dbquit; end
