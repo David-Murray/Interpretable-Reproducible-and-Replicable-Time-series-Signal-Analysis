@@ -26,6 +26,8 @@ Updated on Apr 2018:
 import sys
 from Logger import log
 import matplotlib.pyplot as plt
+from matplotlib.backend_bases import MouseButton
+from matplotlib.collections import LineCollection
 from DataProvider import DoubleSourceProvider3
 import NetFlowExt as nf
 import nilm_metric as nm
@@ -33,10 +35,11 @@ from cnnModel import get_model, weights_loader
 import os
 import numpy as np
 import tensorflow as tf
-from keras.layers import Input
+from tensorflow.keras.layers import Input
 import pandas as pd
 import argparse
 from Arguments import *
+tf.compat.v1.disable_eager_execution()
 
 
 def remove_space(string):
@@ -177,7 +180,13 @@ log('Loading from: ' + loadname_test)
 offset = int(0.5 * (params_appliance[args.appliance_name]['windowlength'] - 1.0))
 
 test_set_x, test_set_y, ground_truth = load_dataset(loadname_test)
-sess = tf.InteractiveSession()
+# print(test_set_x.shape)
+# print(test_set_y.shape)
+# print(ground_truth.shape)
+# sys.exit()
+test_set_x = test_set_x[572000:580000]
+test_set_y = test_set_y[572000:580000]
+sess = tf.compat.v1.keras.backend.get_session()
 
 # Dictonary containing the dataset input and target
 
@@ -191,13 +200,13 @@ test_provider = DoubleSourceProvider3(nofWindows=args.nosOfWindows,
                                       offset=offset)
 
 # TensorFlow placeholders
-x = tf.placeholder(tf.float32,
-                   shape=[None, params_appliance[args.appliance_name]['windowlength']],
-                   name='x')
+x = tf.compat.v1.placeholder(tf.float32,
+                            shape=[None, params_appliance[args.appliance_name]['windowlength']],
+                            name='x')
 
-y_ = tf.placeholder(tf.float32,
-                    shape=[None, 1],
-                    name='y_')
+y_ = tf.compat.v1.placeholder(tf.float32,
+                             shape=[None, 1],
+                             name='y_')
 
 # -------------------------------- Keras Network - from model.py -------------------------------------
 inp = Input(tensor=x)
@@ -211,7 +220,7 @@ model = get_model(args.appliance_name,
 y = model.outputs
 # ----------------------------------------------------------------------------------------------------
 
-sess.run(tf.global_variables_initializer())
+sess.run(tf.compat.v1.global_variables_initializer())
 
 # Load path depending on the model kind
 if args.transfer:
@@ -228,7 +237,7 @@ else:
 log('Model file: {}'.format(param_file))
 weights_loader(model, param_file)
 
-# Calling custom test function
+
 test_prediction = nf.custompredictX(sess=sess,
                                     network=model,
                                     output_provider=test_provider,
@@ -240,6 +249,91 @@ test_prediction = nf.custompredictX(sess=sess,
                                     blank_start=args.blank,
                                     blank_size=args.blanksize)
 
+
+def compute_gradients(model, images):
+    submodel = tf.keras.models.Model([model.inputs[0]], [model.layers[-1].output])#
+    print(submodel.summary())
+    images = tf.convert_to_tensor(images, dtype='float32')
+    with tf.GradientTape() as tape:
+        tape.watch(images)
+        print(images)
+        logits = submodel(images, training=False)
+        # logits = logits.eval(session=sess)
+        # print(logits.shape)
+        logits = tf.reshape(logits, shape=(-1, 1))
+        print("LOGITS")
+        print(logits.shape)
+        probs = logits
+        # probs = tf.nn.softmax(logits, axis=-1)[:, target_class_idx]
+    return tape.gradient(probs, images)
+
+
+
+# load test.txt
+test_array = np.loadtxt('test.txt')
+print(test_array.shape)
+model.trainable = False
+
+i = 2740
+grad_out = compute_gradients(model, test_array)
+grad_out = grad_out.eval(session=sess)
+importance = []
+for diag_i in np.arange(start=299, stop=(grad_out.shape[1]-grad_out.shape[0])-300, step=-1):
+    importance.append(np.fliplr(grad_out).diagonal(diag_i).sum())
+importance = np.vstack(importance)
+plt.plot(test_array[:, 299], label="Input")
+plt.plot(importance, label="Importance")
+plt.legend()
+plt.show()
+sys.exit()
+
+fig_1, axs_1 = plt.subplots(4, figsize=(10,6))
+fig_1.suptitle('Gradient')
+axs_1[0].plot(np.zeros(test_array[:, 0].shape))
+axs_1[1].plot(test_array[i])
+axs_1[2].plot(grad_out[i])
+dydx = grad_out[i]
+points = np.array([np.arange(0, 599, 1), test_array[i]]).T.reshape(-1, 1, 2)
+segments = np.concatenate([points[:-1], points[1:]], axis=1)
+norm = plt.Normalize(dydx.min(), dydx.max())
+lc = LineCollection(segments, cmap='viridis', norm=norm)
+lc.set_array(dydx)
+lc.set_linewidth(2)
+axs_1[3].add_collection(lc)
+axs_1[3].autoscale()
+
+def hover(event):
+    if event.button is MouseButton.LEFT:
+    # remove old draw
+        if len(axs_1[1].lines) > 0:
+            axs_1[1].lines.pop()
+            # axs_1[2].lines.pop()
+            axs_1[2].clear()
+        if len(axs_1[3].collections) > 0:
+            axs_1[3].collections.pop()
+            axs_1[3].autoscale()
+            plt.draw()
+    # new draw
+        axs_1[1].plot(test_array[int(event.xdata)])
+        axs_1[1].relim(visible_only=False)
+        axs_1[2].plot(grad_out[int(event.xdata)])
+        axs_1[2].relim(visible_only=False)
+        dydx = grad_out[int(event.xdata)]
+        points = np.array([np.arange(0, 599, 1), test_array[int(event.xdata)]]).T.reshape(-1, 1, 2)
+        segments = np.concatenate([points[:-1], points[1:]], axis=1)
+        norm = plt.Normalize(dydx.min(), dydx.max())
+        lc = LineCollection(segments, cmap='viridis', norm=norm)
+        lc.set_array(dydx)
+        lc.set_linewidth(2)
+        axs_1[3].add_collection(lc)
+        yabs_max = abs(max(axs_1[3].get_ylim(), key=abs))
+        axs_1[3].set_ylim(ymin=-yabs_max, ymax=yabs_max)
+        plt.draw()
+
+fig_1.canvas.mpl_connect("motion_notify_event", hover)
+plt.show()
+sys.exit()
+# Calling custom test function
 
 # ------------------------------------- Performance evaluation----------------------------------------------------------
 

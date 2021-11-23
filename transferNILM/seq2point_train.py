@@ -123,6 +123,10 @@ def get_arguments():
                         type=int,
                         default=5*10**5,
                         help='Maximum number of rows of csv dataset can handle without loading in chunks')
+    parser.add_argument('--specific',
+                        type=str,
+                        default=None,
+                        help='specify_file_ending')
     return parser.parse_args()
 
 
@@ -132,6 +136,7 @@ log(args)
 
 # some constant parameters
 CHUNK_SIZE = 5*10**6
+
 
 def set_seeds(gpu='0',seed=2019):
     import random as rn
@@ -149,7 +154,14 @@ def set_seeds(gpu='0',seed=2019):
 
 # start the session for training a network
 # sess = tf.InteractiveSession()
-sess = set_seeds()
+if args.specific and "_rng_lock_" in args.specific:
+    sess = set_seeds()
+else:
+    session_conf = tf.ConfigProto() #TensorFlow session configuration
+    session_conf = tf.ConfigProto(intra_op_parallelism_threads=1,inter_op_parallelism_threads=1)
+    session_conf.gpu_options.visible_device_list= '0' # visible GPU
+    sess = tf.Session(graph=tf.get_default_graph(),config=session_conf) #TensorFlow session settings
+    K.set_session(sess)
 
 # the appliance to train on
 appliance_name = args.appliance_name
@@ -260,12 +272,20 @@ log('TensorBoard infos in ./tensorboard_test')
 
 # Save path depending on the training behaviour
 if not args.transfer_model and args.transfer_cnn:
-    save_path = args.save_dir+'/cnn_s2p_' + appliance_name + '_transf_' + args.cnn + '_pointnet_model'
+    if args.specific:
+        save_path = args.save_dir+'/cnn_s2p_' + appliance_name + '_transf_' + args.cnn + '_pointnet_model' + args.specific
+    else:
+        save_path = args.save_dir+'/cnn_s2p_' + appliance_name + '_transf_' + args.cnn + '_pointnet_model'
 else:
-    save_path = args.save_dir+'/cnn_s2p_' + appliance_name + '_pointnet_model'
+    if args.specific:
+        save_path = args.save_dir+'/cnn_s2p_' + appliance_name + '_pointnet_model' + args.specific
+    else:
+        save_path = args.save_dir+'/cnn_s2p_' + appliance_name + '_pointnet_model'
     
 if not os.path.exists(save_path):
-        os.makedirs(save_path)
+    print("cretingn save path")
+    print(save_path)
+    os.makedirs(save_path)
 
 # Calling custom training function
 train_loss, val_loss, step_train_loss, step_val_loss = nf.customfit(sess=sess,

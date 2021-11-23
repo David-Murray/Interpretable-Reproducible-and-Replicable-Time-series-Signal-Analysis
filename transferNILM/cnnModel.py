@@ -1,15 +1,15 @@
 from Arguments import *
 from Logger import log
-from keras.models import Model
-from keras.layers import Dense, Conv2D, Flatten, Reshape
-from keras.utils import print_summary, plot_model
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Dense, Conv2D, Flatten, Reshape
+from tensorflow.keras.utils import plot_model
 import numpy as np
-import keras.backend as K
+import tensorflow.keras.backend as K
 import os
 import tensorflow as tf
 import h5py
 import argparse
-
+tf.compat.v1.disable_eager_execution()
 
 def get_model(appliance, input_tensor, window_length, transfer_dense=False, transfer_cnn=False,
               cnn='kettle', n_dense=1, pretrainedmodel_dir='./models/'):
@@ -70,7 +70,7 @@ def get_model(appliance, input_tensor, window_length, transfer_dense=False, tran
 
     model = Model(inputs=input_tensor, outputs=d_out)
 
-    session = K.get_session()
+    session = tf.compat.v1.keras.backend.get_session()
 
     if transfer_dense:
         log("Transfer learning...")
@@ -95,17 +95,17 @@ def get_model(appliance, input_tensor, window_length, transfer_dense=False, tran
         raise argparse.ArgumentTypeError('Model selection error.')
 
     # Printing, logging and plotting the model
-    print_summary(model_def)
+    # print_summary(model_def)
     # plot_model(model, to_file='./model.png', show_shapes=True, show_layer_names=True, rankdir='TB')
 
-    # Adding network structure to both the log file and output terminal
-    files = [x for x in os.listdir('./') if x.endswith(".log")]
-    with open(max(files, key=os.path.getctime), 'a') as fh:
-        # Pass the file handle in as a lambda function to make it callable
-        model_def.summary(print_fn=lambda x: fh.write(x + '\n'))
+    # # Adding network structure to both the log file and output terminal
+    # files = [x for x in os.listdir('./') if x.endswith(".log")]
+    # with open(max(files, key=os.path.getctime), 'a') as fh:
+    #     # Pass the file handle in as a lambda function to make it callable
+    #     model_def.summary(print_fn=lambda x: fh.write(x + '\n'))
 
     # Check weights slice
-    for v in tf.trainable_variables():
+    for v in tf.compat.v1.trainable_variables():
         if v.name == 'conv2d_1/kernel:0':
             cnn1_weights = session.run(v)
     return model_def, cnn1_weights

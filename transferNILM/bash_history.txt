@@ -1,6 +1,9 @@
 conda activate transfernilm
-PYTHONHASHSEED=0 python seq2point_train.py --appliance_name 'washingmachine' --datadir './dataset_management/refit/' --save_dir './trained_model' --transfer_model False --crop_dataset 43470000 --n_epoch 50 --gpus 1
+PYTHONHASHSEED=0 python seq2point_train.py --appliance_name washingmachine --datadir ./dataset_management/refit/ --save_dir ./trained_model --transfer_model False --crop_dataset 43470000 --n_epoch 50 --gpus 1
 
-python seq2point_test.py --appliance_name 'washingmachine' --datadir './dataset_management/refit/' --trained_model_dir './trained_model' --save_results_dir './result' --transfer False --crop_dataset 6000000 --plot_results True
+python seq2point_test.py --appliance_name washingmachine --datadir ./dataset_management/refit/ --trained_model_dir ./trained_model --save_results_dir ./result --transfer False --crop_dataset 6000000 --plot_results True
 
-python seq2point_test.py --appliance_name 'washingmachine' --datadir './dataset_management/ampds/' --trained_model_dir './trained_model' --save_results_dir './result' --transfer False --crop_dataset 6000000 --plot_results True
+python seq2point_test.py --appliance_name washingmachine --datadir ./dataset_management/ampds/ --trained_model_dir ./trained_model --save_results_dir ./result --transfer False --crop_dataset 6000000 --plot_results True
+
+
+python seq2point_test.py --appliance_name washingmachine --datadir ./dataset_management/refit/ --trained_model_dir ./trained_model --specific _r1  --save_results_dir ./result --transfer False --crop_dataset 6000000 --plot_results False

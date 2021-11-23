@@ -4,5 +4,8 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"python.pythonPath": "D:\\Anaconda3\\envs\\tf230\\python.exe",
+		"cSpell.enabled": false
+	}
 }

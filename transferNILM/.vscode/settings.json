@@ -1,8 +1,11 @@
 {
-    "python.pythonPath": "D:/Anaconda3/envs/tf230/python.exe",
-    "ubuntu.python.pythonPath": "/home/david/anaconda3/envs/transfernilm/bin/python",
+    "python.pythonPath": "D:\\Anaconda3\\envs\\tf230\\python.exe",
+    "os.python.pythonPath": "/home/david/anaconda3/envs/tf230/bin/python",
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
     "python.linting.pylintPath": "D:/Anaconda3/envs/tf230/Scripts/pylint.exe",
-    "ubuntu.python.linting.pylintPath": "/home/david/anaconda3/envs/transfernilm/bin/pylint",
+    "os.python.linting.pylintPath": "/home/david/anaconda3/envs/tf230/bin/pylint",
+    "python.linting.pylintArgs": [],
+    "python.jediEnabled": true,
+    "python.languageServer": "Jedi"
 }

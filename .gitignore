@@ -133,3 +133,4 @@ dmypy.json
 *.csv
 # Python Numpy
 *.npy
+*.h5

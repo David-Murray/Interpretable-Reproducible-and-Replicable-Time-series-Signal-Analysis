@@ -1,8 +1,9 @@
 import numpy as np
 import time
 import sys
+import os
 from Logger import log
-from keras import backend as K
+from tensorflow.keras import backend as K
 import tensorflow as tf
 
 
@@ -252,7 +253,8 @@ def custompredictX(sess,
 
     output_container = []
     banum = 0
-
+    if os.path.exists("test.txt"):
+        os.remove("test.txt")
     for X_out in output_provider.feed(out_kwag['inputs']):
         #log(banum)
         #banum += 1
@@ -263,9 +265,11 @@ def custompredictX(sess,
             mask = np.zeros((l_x, l_y), dtype=bool) # create mask
             mask[:, blank_start:blank_start+blank_size] = True
             feed_dict[x][mask] = np.NaN
+        with open("test.txt", "ab") as f:
+            f.write(b"\n")
+            np.savetxt(f, feed_dict[x])
         output = sess.run(y_op, feed_dict=feed_dict)
         output_array = np.array(output[0]).reshape(-1, output_length)
         output_container.append(output_array)
 
     return np.vstack(output_container)
-
