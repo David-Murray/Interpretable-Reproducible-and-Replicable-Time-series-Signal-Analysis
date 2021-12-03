@@ -255,6 +255,8 @@ def custompredictX(sess,
     banum = 0
     if os.path.exists("test.txt"):
         os.remove("test.txt")
+    if os.path.exists("targets.txt"):
+        os.remove("targets.txt")
     for X_out in output_provider.feed(out_kwag['inputs']):
         #log(banum)
         #banum += 1
@@ -271,5 +273,11 @@ def custompredictX(sess,
         output = sess.run(y_op, feed_dict=feed_dict)
         output_array = np.array(output[0]).reshape(-1, output_length)
         output_container.append(output_array)
+
+    for X_tar in output_provider.feed(out_kwag['targets']):
+        feed_dict = {x: X_tar,}
+        with open("targets.txt", "ab") as f:
+            f.write(b"\n")
+            np.savetxt(f, feed_dict[x])
 
     return np.vstack(output_container)

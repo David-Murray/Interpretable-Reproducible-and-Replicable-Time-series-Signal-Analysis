@@ -1,6 +1,6 @@
 import os
-import sys
 import time
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
@@ -20,12 +20,13 @@ target_dict[f"run_0"] = np.load(os.path.abspath(os.path.join(os.path.dirname(__f
 for i in np.arange(0, runs-1, 1):
     prediction_dict[f"run_{i}"] = np.load(os.path.abspath(os.path.join(os.path.dirname(__file__), f'./explain/washingmachine_test_H1.csv_pred_2_{i}.npy')))
 importance = np.loadtxt(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../importance.csv')))
-fig_1, axs_1 = plt.subplots(3, figsize=(10,6))
+fig_1, axs_1 = plt.subplots(3, figsize=(15,9), sharex=True)
 fig_1.suptitle('Learned Features via Obfuscation')
+fig_1.subplots_adjust(wspace=0, hspace=0)
 
 
 flag_x = False
-centre_index = 705900 # 8585 # 8500 # 959750 # 152350
+centre_index = 575600 # 8585 # 8500 # 959750 # 152350
 plot_size = 599
 alpha_val = 1
 blank_size = 50
@@ -33,11 +34,23 @@ obs_row = None
 diag_rows = None
 start_index = centre_index - offset
 end_index = start_index + plot_size
-axs_1[0].plot(np.arange(start_index-offset,end_index+offset), mains_dict[f"run_0"][start_index:start_index+offset+plot_size+offset], alpha=1, label="Aggregate")
-axs_1[0].plot(np.arange(start_index,end_index),target_dict[f"run_0"][start_index:end_index], alpha=1, label="Target")
-axs_1[0].plot(np.arange(start_index,end_index),prediction_none[start_index:end_index], alpha=1, label="Prediction (No Obs)")
-axs_1[1].plot(np.arange(start_index,end_index),importance[:599], alpha=1, label="Importance (No Obs)")
-axs_1[1].set_xlim(start_index, end_index-20)
+
+axs_1[0].plot(np.arange(0,plot_size), mains_dict[f"run_0"][start_index+299-20:start_index+299-20+plot_size], alpha=1, label="Aggregate")
+
+axs_1[0].plot(np.arange(0, plot_size),target_dict[f"run_0"][start_index-20:end_index-20], alpha=1, label="Target")
+
+axs_1[0].plot(np.arange(0,plot_size),prediction_none[start_index-20:end_index-20], alpha=1, label="Prediction")
+
+divider0 = make_axes_locatable(axs_1[0])
+cax0 = divider0.append_axes("right", size="5%", pad=.05)
+cax0.remove()
+
+axs_1[1].plot(np.arange(0,end_index-start_index),importance[:599], alpha=1, label="Gradients")
+axs_1[1].set_xlim(0, end_index-start_index)
+axs_1[1].set_ylabel("Cumulative\nIntegrated\nGradients", fontsize=13)
+divider1 = make_axes_locatable(axs_1[1])
+cax1 = divider1.append_axes("right", size="5%", pad=.05)
+cax1.remove()
 
 target = target_dict[f"run_0"][start_index:end_index].flatten()
 prediction = prediction_none[start_index:end_index].flatten()
@@ -56,53 +69,56 @@ for i in np.arange(0, runs-1, 1): # runs == obsfucation start
         obs_row = new_stack
     else:
         obs_row = np.vstack((obs_row, new_stack))
+
 obs_row_blanks = np.fliplr(np.triu(np.fliplr(obs_row), k=-330))
 obs_row_blanks = np.fliplr(np.tril(np.fliplr(obs_row_blanks), k=300))
 
 axs_1[0].set_title(f"Obfuscation (Test Index: {centre_index})", fontsize=13)
 # axs_1[0].set_xlabel("Sample", fontsize=13)
-axs_1[0].set_ylabel("Prediction (Watts)", fontsize=13)
+axs_1[0].set_ylabel("Prediction\n(Watts)", fontsize=13)
 axs_1[0].legend(loc='upper right')
-axs_1[0].set_xlim(start_index, end_index-20) # minus 20 samples lines up line plot with heatmap
 
-imshow = axs_1[2].imshow(obs_row,  aspect='auto', cmap='nipy_spectral', extent=[start_index,end_index-blank_size,550,0])
-imshow_blanks = axs_1[2].imshow(obs_row_blanks,  aspect='auto', cmap='nipy_spectral', extent=[start_index,end_index-blank_size,550,0])
-divider = make_axes_locatable(axs_1[2])
-cax = divider.append_axes("right", size="5%", pad=0.05)
-cbar = fig_1.colorbar(imshow, cax=cax)
-cbar.set_label("Power (Watts)", fontsize=13)
+imshow = axs_1[2].imshow(obs_row,  aspect='auto', cmap='nipy_spectral', extent=[0,end_index-start_index,550,0])
+imshow_blanks = axs_1[2].imshow(obs_row_blanks,  aspect='auto', cmap='nipy_spectral', extent=[0,end_index-start_index,550,0])
+divider2 = make_axes_locatable(axs_1[2])
+cax2 = divider2.append_axes("right", size="5%", pad=.05)
+# divider = make_axes_locatable(axs_1[2])
+# cax = divider.append_axes("right", size="3%", pad=0.05)
+cbar = fig_1.colorbar(imshow, cax=cax2)
+cbar.set_label("Power (Watts)", fontsize=12)
+
 
 # Feature Area 1
-axs_1[0].axvspan(705666, 705666+50, facecolor='0.5', alpha=0.25)
-axs_1[0].annotate('1.', xy=(705666+5, 2000), xycoords='data')
-axs_1[2].add_patch(Ellipse((705730, 222),
-        width=70,
-        height=40,
-        angle=-60,
+axs_1[0].axvspan(575502-start_index, 575502+50-start_index, facecolor='0.5', alpha=0.25)
+axs_1[0].annotate('1.', xy=(575502+5-start_index, 2000), xycoords='data')
+axs_1[2].add_patch(Ellipse((186, 346),
+        width=20,
+        height=100,
+        angle=0,
         linewidth=1, fill=False))
-axs_1[2].annotate('1.', xy=(705705, 200), xycoords='data', fontsize=12)
+axs_1[2].annotate('1.', xy=(184, 338), xycoords='data', fontsize=12, color="white")
 # Feature Area 2
-axs_1[0].axvspan(705929, 705929+50, facecolor='0.5', alpha=0.25)
-axs_1[0].annotate('2.', xy=(705929+5, 2000), xycoords='data')
-axs_1[2].add_patch(Ellipse((705737, 482),
+axs_1[0].axvspan(575666-start_index, 575666+50-start_index, facecolor='0.5', alpha=0.25)
+axs_1[0].annotate('2.', xy=(575666+5-start_index, 2000), xycoords='data')
+axs_1[2].add_patch(Ellipse((200, 496),
         width=45,
-        height=35,
-        angle=-60,
+        height=32,
+        angle=0, edgecolor="white",
         linewidth=1, fill=False))
-axs_1[2].annotate('2.', xy=(705735, 488), xycoords='data', fontsize=12)
+axs_1[2].annotate('2.', xy=(188, 502), xycoords='data', fontsize=12, color="white")
 # Feature Area 3
-axs_1[0].axvspan(705831, 705850+75, facecolor='0.5', alpha=0.25)
-axs_1[0].annotate('3.', xy=(705850+5, 2000), xycoords='data')
-axs_1[2].add_patch(Ellipse((705710, 440),
-        width=80,
-        height=45,
-        angle=-75,
+axs_1[0].axvspan(575559-start_index, 575559+50-start_index, facecolor='0.5', alpha=0.25)
+axs_1[0].annotate('3.', xy=(575559+5-start_index, 2000), xycoords='data')
+axs_1[2].add_patch(Ellipse((275, 321),
+        width=16,
+        height=40,
+        angle=0, edgecolor="white",
         linewidth=1, fill=False))
-axs_1[2].annotate('3.', xy=(705701, 445), xycoords='data', fontsize=12)
+axs_1[2].annotate('3.', xy=(260, 296), xycoords='data', fontsize=12, color="white")
 
 
 axs_1[2].set_xlabel("Sample", fontsize=13)
-axs_1[2].set_ylabel("50 Sample Obsfucation\nStart Index", fontsize=13)
+axs_1[2].set_ylabel("Obsfucation\nStart Index", fontsize=13)
 
 spans = []
 lines = []

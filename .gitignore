@@ -134,3 +134,4 @@ dmypy.json
 # Python Numpy
 *.npy
 *.h5
+test.txt

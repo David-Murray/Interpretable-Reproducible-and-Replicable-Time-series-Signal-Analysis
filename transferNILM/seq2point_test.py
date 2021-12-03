@@ -24,8 +24,11 @@ Updated on Apr 2018:
 - Keras 2.1.5
 """
 import sys
+
+from numpy.core.shape_base import vstack
 from Logger import log
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.backend_bases import MouseButton
 from matplotlib.collections import LineCollection
 from DataProvider import DoubleSourceProvider3
@@ -125,8 +128,28 @@ def get_arguments():
                         type=int,
                         default=None,
                         help='specify_mask_size')
+    parser.add_argument("--sigfault",
+                        type=float,
+                        default=0.0,
+                        help="percentage data to drop")
     return parser.parse_args()
 
+
+def set_seeds(gpu='0',seed=2019):
+    import random as rn
+    np.random.seed(seed)# numpy random seed
+    rn.seed(seed)# random number generator
+    # session_conf = tf.ConfigProto() #TensorFlow session configuration
+    # session_conf = tf.ConfigProto(intra_op_parallelism_threads=1,inter_op_parallelism_threads=1)
+    # session_conf.gpu_options.visible_device_list= gpu # visible GPU
+    # from keras import backend as K
+    # K.set_image_data_format('channels_first')
+    # tf.set_random_seed(seed) # TensorFlowrandom seed
+    # sess =tf.Session(graph=tf.get_default_graph(),config=session_conf)#TensorFlow session settings
+    # K.set_session(sess)
+    # return sess
+
+sess = set_seeds()
 
 args = get_arguments()
 log('Arguments: ')
@@ -180,12 +203,24 @@ log('Loading from: ' + loadname_test)
 offset = int(0.5 * (params_appliance[args.appliance_name]['windowlength'] - 1.0))
 
 test_set_x, test_set_y, ground_truth = load_dataset(loadname_test)
-# print(test_set_x.shape)
-# print(test_set_y.shape)
-# print(ground_truth.shape)
-# sys.exit()
-test_set_x = test_set_x[572000:580000]
-test_set_y = test_set_y[572000:580000]
+
+signal_fault_percent = args.sigfault
+signal_faults = np.zeros(test_set_x.shape[0], dtype=int)
+signal_faults[:int(test_set_x.shape[0] * signal_fault_percent)] = 1
+np.random.shuffle(signal_faults)
+signal_faults = signal_faults.astype(bool)
+test_set_x[signal_faults] = test_set_x.min()
+# test_set_y[signal_faults] = test_set_y.min()
+# ground_truth[signal_faults[299:-299]] = ground_truth.min()
+
+# i = 1856300 refit
+# i = 705000 +200 #tp
+i = 705601-14
+# i = 575301-20
+# i = 575000 #fn
+# i = 516800 #fp
+test_set_x = test_set_x[i:i+2000]
+test_set_y = test_set_y[i:i+2000]
 sess = tf.compat.v1.keras.backend.get_session()
 
 # Dictonary containing the dataset input and target
@@ -274,65 +309,107 @@ test_array = np.loadtxt('test.txt')
 print(test_array.shape)
 model.trainable = False
 
-i = 2740
+target_array = np.loadtxt('targets.txt')
 grad_out = compute_gradients(model, test_array)
 grad_out = grad_out.eval(session=sess)
+mean_noise = 0
+noise_mean = np.mean(target_array.flatten())
+print(noise_mean)
+sqrt_noise = np.sqrt(np.abs(noise_mean))
+print(sqrt_noise)
+noise_array = np.random.normal(mean_noise, sqrt_noise, size=target_array.shape)
+print(target_array.shape)
+print(noise_array.shape)
+test_noise_array = np.zeros(test_array.shape)
+print(test_array.shape)
+i = 0
+noise_grad_out = compute_gradients(model, test_noise_array)
+noise_grad_out = noise_grad_out.eval(session=sess)
+
+# importance_nosum = []
+# for diag_i in np.arange(start=299, stop=(grad_out.shape[1]-grad_out.shape[0])-300, step=-1):
+#     if np.fliplr(grad_out).diagonal(diag_i).shape[0] == 599:
+#         importance_nosum.append(np.fliplr(grad_out).diagonal(diag_i))
+# importance_nosum = np.vstack(importance_nosum)
+# b = (importance_nosum - np.min(importance_nosum))/np.ptp(importance_nosum)
+# f_1, a_1 = plt.subplots(2)
+
+# imshow = a_1[0].imshow(b.T,cmap='binary', aspect='auto')
+# divider = make_axes_locatable(a_1[0])
+# cax = divider.append_axes("right", size="5%", pad=0.05)
+# cbar = f_1.colorbar(imshow, cax=cax)
+# a_1[1].plot(test_array[299:-300, 299], label="Input")
+# a_1[1].set_xlim(0, test_array.shape[0]-599+40)
+# plt.show()
+# sys.exit()
 importance = []
 for diag_i in np.arange(start=299, stop=(grad_out.shape[1]-grad_out.shape[0])-300, step=-1):
-    importance.append(np.fliplr(grad_out).diagonal(diag_i).sum())
+    importance.append(np.fliplr(grad_out).diagonal(diag_i).mean())
 importance = np.vstack(importance)
-plt.plot(test_array[:, 299], label="Input")
+# noise_importance = []
+# for diag_i in np.arange(start=299, stop=(noise_grad_out.shape[1]-noise_grad_out.shape[0])-300, step=-1):
+#     noise_importance.append(np.fliplr(noise_grad_out).diagonal(diag_i).mean())
+# noise_importance = np.vstack(noise_importance)
+# b_imp = importance > noise_importance
+# importance[~b_imp] = noise_importance[~b_imp]
+np.savetxt("importance.csv", importance, delimiter=",")
+# plt.plot(test_array[:, 299], label="Input")
 plt.plot(importance, label="Importance")
 plt.legend()
 plt.show()
 sys.exit()
 
-fig_1, axs_1 = plt.subplots(4, figsize=(10,6))
-fig_1.suptitle('Gradient')
-axs_1[0].plot(np.zeros(test_array[:, 0].shape))
-axs_1[1].plot(test_array[i])
-axs_1[2].plot(grad_out[i])
-dydx = grad_out[i]
-points = np.array([np.arange(0, 599, 1), test_array[i]]).T.reshape(-1, 1, 2)
-segments = np.concatenate([points[:-1], points[1:]], axis=1)
-norm = plt.Normalize(dydx.min(), dydx.max())
-lc = LineCollection(segments, cmap='viridis', norm=norm)
-lc.set_array(dydx)
-lc.set_linewidth(2)
-axs_1[3].add_collection(lc)
-axs_1[3].autoscale()
+# fig_1, axs_1 = plt.subplots(5, figsize=(10,6))
+# fig_1.suptitle('Gradient')
+# axs_1[0].plot(test_array[:, 299]) # full data
+# axs_1[0].plot(target_array[:, 299])
+# axs_1[0].plot(test_prediction)
+# axs_1[1].plot(test_array[i]) # window
+# axs_1[1].plot(test_prediction[i-298:i+299])
+# axs_1[2].plot(grad_out[i]) # window gradients
+# dydx = importance[i] # summed gradients
+# points = np.array([np.arange(0, 599, 1), test_array[i]]).T.reshape(-1, 1, 2)
+# segments = np.concatenate([points[:-1], points[1:]], axis=1)
+# norm = plt.Normalize(dydx.min(), dydx.max())
+# lc = LineCollection(segments, cmap='viridis', norm=norm)
+# lc.set_array(dydx)
+# lc.set_linewidth(2)
+# axs_1[3].add_collection(lc)
+# axs_1[3].autoscale()
+# axs_1[4].plot(importance)
 
-def hover(event):
-    if event.button is MouseButton.LEFT:
-    # remove old draw
-        if len(axs_1[1].lines) > 0:
-            axs_1[1].lines.pop()
-            # axs_1[2].lines.pop()
-            axs_1[2].clear()
-        if len(axs_1[3].collections) > 0:
-            axs_1[3].collections.pop()
-            axs_1[3].autoscale()
-            plt.draw()
-    # new draw
-        axs_1[1].plot(test_array[int(event.xdata)])
-        axs_1[1].relim(visible_only=False)
-        axs_1[2].plot(grad_out[int(event.xdata)])
-        axs_1[2].relim(visible_only=False)
-        dydx = grad_out[int(event.xdata)]
-        points = np.array([np.arange(0, 599, 1), test_array[int(event.xdata)]]).T.reshape(-1, 1, 2)
-        segments = np.concatenate([points[:-1], points[1:]], axis=1)
-        norm = plt.Normalize(dydx.min(), dydx.max())
-        lc = LineCollection(segments, cmap='viridis', norm=norm)
-        lc.set_array(dydx)
-        lc.set_linewidth(2)
-        axs_1[3].add_collection(lc)
-        yabs_max = abs(max(axs_1[3].get_ylim(), key=abs))
-        axs_1[3].set_ylim(ymin=-yabs_max, ymax=yabs_max)
-        plt.draw()
+# def hover(event):
+#     if event.button is MouseButton.LEFT:
+#     # remove old draw
+#         if len(axs_1[1].lines) > 0:
+#             axs_1[1].lines.clear()
+#             # axs_1[2].lines.pop()
+#             axs_1[2].clear()
+#         if len(axs_1[3].collections) > 0:
+#             axs_1[3].collections.pop()
+#             axs_1[3].autoscale()
+#             plt.draw()
+#     # new draw
+#         axs_1[1].plot(test_array[int(event.xdata)])
+#         axs_1[1].plot(test_prediction[int(event.xdata)-298:int(event.xdata)+299])
+#         axs_1[1].relim(visible_only=False)
+#         axs_1[2].plot(grad_out[int(event.xdata)])
+#         axs_1[2].relim(visible_only=False)
+#         dydx = importance[int(event.xdata)]
+#         points = np.array([np.arange(0, 599, 1), test_array[int(event.xdata)]]).T.reshape(-1, 1, 2)
+#         segments = np.concatenate([points[:-1], points[1:]], axis=1)
+#         norm = plt.Normalize(dydx.min(), dydx.max())
+#         lc = LineCollection(segments, cmap='viridis', norm=norm)
+#         lc.set_array(dydx)
+#         lc.set_linewidth(2)
+#         axs_1[3].add_collection(lc)
+#         yabs_max = abs(max(axs_1[3].get_ylim(), key=abs))
+#         axs_1[3].set_ylim(ymin=-yabs_max, ymax=yabs_max)
+#         plt.draw()
 
-fig_1.canvas.mpl_connect("motion_notify_event", hover)
-plt.show()
-sys.exit()
+# fig_1.canvas.mpl_connect("motion_notify_event", hover)
+# plt.show()
+# sys.exit()
 # Calling custom test function
 
 # ------------------------------------- Performance evaluation----------------------------------------------------------
@@ -362,6 +439,32 @@ ground_truth = ground_truth * appliance_std + appliance_mean
 
 sess.close()
 
+test_array = test_set_x.flatten() * aggregate_std + aggregate_mean
+fig_p, axs_p = plt.subplots(2, figsize=(10,6))
+# axs_p[0].plot(test_array[1407000+299:1407000+299+3000], label="Input")
+# axs_p[0].plot(prediction[1407000:1410000], label="Prediction")
+# axs_p[0].plot(ground_truth[1407000:1410000], label="Ground Truth")
+axs_p[0].plot(test_array[1856300+299:1856300+299+2000], label="Input")
+axs_p[0].plot(prediction[1856300:1856300+2000], label="Prediction")
+axs_p[0].plot(ground_truth[1856300:1856300+2000], label="Ground Truth")
+axs_p[0].legend(loc='upper right')
+axs_p[0].set_ylabel('Watts')
+axs_p[0].set_xlabel('Sample')
+axs_p[1].plot(test_array[493049+299:493049+299+2000], label="Input")
+axs_p[1].plot(prediction[493049:493049+2000], label="Prediction")
+axs_p[1].plot(ground_truth[493049:493049+2000], label="Ground Truth")
+axs_p[1].set_ylabel('Watts')
+axs_p[1].set_xlabel('Sample')
+axs_p[1].legend(loc='upper right')
+fig_p.suptitle("Washing Machine - H8")
+plt.show()
+
+print(np.nansum(prediction), "&", np.nansum(ground_truth), "&", np.nansum(prediction)/np.nansum(ground_truth))
+print(f"MAE: {np.mean(np.abs(ground_truth.flatten() - prediction.flatten()))}")
+
+sys.exit()
+with open("signal_fault.txt", 'a') as file:
+    file.write(f"{args.sigfault},{np.nansum(prediction)},{np.nansum(ground_truth)},{np.nansum(prediction)/np.nansum(ground_truth)}\n")
 
 # ------------------------------------------ metric evaluation----------------------------------------------------------
 sample_second = 8.0  # sample time is 8 seconds
